@@ -1,0 +1,32 @@
+name: Build Kernel
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout kernel source
+        uses: actions/checkout@v2
+        with:
+          repository: MiCode/Xiaomi_Kernel_OpenSource
+          ref: mondrian-s-oss
+
+      - name: Set up environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bison flex libssl-dev make libc6-dev libncurses5-dev crossbuild-essential-arm64
+
+      - name: Build kernel
+        run: |
+          export ARCH=arm64
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          make mondrian_defconfig
+          make -j$(nproc)
+
+      - name: Upload kernel image
+        uses: actions/upload-artifact@v2
+        with:
+          name: Image.gz-dtb
+          path: arch/arm64/boot/Image.gz-dtb
